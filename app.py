@@ -402,7 +402,7 @@ def delete_fund(fund_id):
     return redirect(url_for('funds'))
 
 
-@app.route('/edit_due_diligence/<int:dd_id>', methods=['GET', 'POST'])
+@app.route('/edit_due_diligence/<int:dd_id>', methods=['POST'])
 @login_required
 def edit_due_diligence(dd_id):
     dd = DueDiligence.query.get_or_404(dd_id)
@@ -540,5 +540,4 @@ def make_shell_context():
 # 设置 shell 上下文处理器
 @app.shell_context_processor
 def shell_context():
-
     return make_shell_context()
