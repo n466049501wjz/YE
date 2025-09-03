@@ -14,9 +14,9 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # 用户与尽调记录的关系
-    due_diligences = db.relationship('DueDiligence', back_populates='author', lazy=True)
+    due_diligences = db.relationship('DueDiligence', backref='author', lazy=True)
     # 用户与批注的关系 - 修改反向引用名称
-    comments = db.relationship('DueDiligenceComment', back_populates='comment_author', lazy=True)
+    comments = db.relationship('DueDiligenceComment', backref='comment_author', lazy=True)
 
 
 class PrivateFund(db.Model):
@@ -32,7 +32,7 @@ class PrivateFund(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # 私募与尽调记录的关系
-    due_diligences = db.relationship('DueDiligence', back_populates='fund', lazy=True)
+    due_diligences = db.relationship('DueDiligence', backref='fund', lazy=True)
 
     def get_latest_due_diligence_date(self):
         if self.due_diligences:
@@ -50,10 +50,7 @@ class DueDiligence(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # 尽调记录与批注的关系
-    comments = db.relationship('DueDiligenceComment', back_populates='due_diligence', lazy=True, cascade='all, delete-orphan')
-
-    # 明确指定与User的关系
-    author = db.relationship('User', back_populates='due_diligences')
+    comments = db.relationship('DueDiligenceComment', backref='due_diligence', lazy=True, cascade='all, delete-orphan')
 
 
 class DueDiligenceComment(db.Model):
@@ -63,8 +60,5 @@ class DueDiligenceComment(db.Model):
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # 明确指定与User的关系
-    comment_author = db.relationship('User', back_populates='comments')
-    
-    # 明确指定与DueDiligence的关系
-    due_diligence = db.relationship('DueDiligence', back_populates='comments')
+    # 修改关系定义，避免名称冲突
+    author = db.relationship('User', backref='authored_comments')
