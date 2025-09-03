@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>私募数据库</h1>
+    <a href="{{ url_for('add_fund') }}" class="btn btn-primary">添加私募</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title">筛选条件</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="management_scale_min" class="form-label">管理规模最小值(亿元)</label>
+                <input type="number" step="0.1" class="form-control" id="management_scale_min" name="management_scale_min" 
+                    value="{{ request.args.get('management_scale_min', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label for="management_scale_max" class="form-label">管理规模最大值(亿元)</label>
+                <input type="number" step="0.1" class="form-control" id="management_scale_max" name="management_scale_max" 
+                    value="{{ request.args.get('management_scale_max', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label for="strategy" class="form-label">策略标签</label>
+                <select class="form-select" id="strategy" name="strategy">
+                    <option value="">全部</option>
+                    {% for strategy in all_strategies %}
+                    <option value="{{ strategy }}" {% if request.args.get('strategy') == strategy %}selected{% endif %}>{{ strategy }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="region" class="form-label">所在地区</label>
+                <select class="form-select" id="region" name="region">
+                    <option value="">全部</option>
+                    {% for region in all_regions %}
+                    <option value="{{ region }}" {% if request.args.get('region') == region %}selected{% endif %}>{{ region }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="keyword" class="form-label">关键词</label>
+                <input type="text" class="form-control" id="keyword" name="keyword" 
+                    value="{{ request.args.get('keyword', '') }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">筛选</button>
+                <a href="{{ url_for('funds') }}" class="btn btn-secondary">重置</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">私募列表 ({{ funds|length }} 家)</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>
+                            <a href="{{ url_for('funds', sort_by='name', order='asc' if sort_by != 'name' or order == 'desc' else 'desc', **request.args) }}">
+                                私募名称 {% if sort_by == 'name' %}<i class="bi bi-arrow-{{ 'up' if order == 'asc' else 'down' }}"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{{ url_for('funds', sort_by='establishment_date', order='asc' if sort_by != 'establishment_date' or order == 'desc' else 'desc', **request.args) }}">
+                                成立日期 {% if sort_by == 'establishment_date' %}<i class="bi bi-arrow-{{ 'up' if order == 'asc' else 'down' }}"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{{ url_for('funds', sort_by='management_scale', order='asc' if sort_by != 'management_scale' or order == 'desc' else 'desc', **request.args) }}">
+                                管理规模(亿元) {% if sort_by == 'management_scale' %}<i class="bi bi-arrow-{{ 'up' if order == 'asc' else 'down' }}"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>团队规模</th>
+                        <th>策略标签</th>
+                        <th>所在地区</th>
+                        <th>最新尽调日期</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fund in funds %}
+                    <tr style="cursor: pointer;" onclick="window.location='{{ url_for('fund_detail', fund_id=fund.id) }}'">
+                        <td>{{ fund.name }}</td>
+                        <td>{{ fund.establishment_date.strftime('%Y-%m-%d') if fund.establishment_date else '未知' }}</td>
+                        <td>{{ fund.management_scale if fund.management_scale else '未知' }}</td>
+                        <td>{{ fund.team_size if fund.team_size else '未知' }}</td>
+                        <td>
+                            {% if fund.strategy_tags %}
+                                {% for tag in fund.strategy_tags.split(',') %}
+                                    <span class="badge bg-secondary">{{ tag.strip() }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </td>
+                        <td>{{ fund.region if fund.region else '未知' }}</td>
+                        <td>
+                            {% set latest_dd = fund.get_latest_due_diligence_date() %}
+                            {{ latest_dd.strftime('%Y-%m-%d') if latest_dd else '暂无尽调' }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">暂无私募数据</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

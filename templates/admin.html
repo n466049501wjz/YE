@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="mb-4">用户管理</h1>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title">添加用户</h5>
+    </div>
+    <div class="card-body">
+        <form id="create-user-form">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="username" class="form-label">用户名</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="password" class="form-label">密码</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="role" class="form-label">角色</label>
+                    <select class="form-select" id="role" name="role">
+                        <option value="user">普通用户</option>
+                        <option value="admin">管理员</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">添加用户</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title">用户列表</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>用户名</th>
+                        <th>角色</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>
+                            <select class="form-select user-role" data-user-id="{{ user.id }}">
+                                <option value="user" {% if user.role == 'user' %}selected{% endif %}>普通用户</option>
+                                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>管理员</option>
+                            </select>
+                        </td>
+                        <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            {% if user.id != current_user.id %}
+                            <button class="btn btn-sm btn-danger delete-user" data-user-id="{{ user.id }}">删除</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 创建用户表单提交
+    document.getElementById('create-user-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch('{{ url_for("create_user") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('用户创建成功');
+                window.location.reload();
+            } else {
+                alert('错误: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('发生错误，请重试');
+        });
+    });
+    
+    // 用户角色更改
+    document.querySelectorAll('.user-role').forEach(select => {
+        select.addEventListener('change', function() {
+            const userId = this.dataset.userId;
+            const newRole = this.value;
+            
+            const formData = new FormData();
+            formData.append('user_id', userId);
+            formData.append('role', newRole);
+            
+            fetch('{{ url_for("update_user_role") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('错误: ' + data.error);
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('发生错误，请重试');
+            });
+        });
+    });
+    
+    // 删除用户
+    document.querySelectorAll('.delete-user').forEach(button => {
+        button.addEventListener('click', function() {
+            if (!confirm('确定要删除这个用户吗？此操作不可撤销。')) {
+                return;
+            }
+            
+            const userId = this.dataset.userId;
+            
+            // 这里需要实现删除用户的API
+            alert('删除用户功能尚未实现');
+        });
+    });
+});
+</script>
+{% endblock %}

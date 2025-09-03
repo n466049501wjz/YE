@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">编辑尽调记录</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="date" class="form-label">尽调日期</label>
+                        <input type="date" class="form-control" id="date" name="date" 
+                               value="{{ dd.date.strftime('%Y-%m-%d') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">尽调内容</label>
+                        <textarea class="form-control" id="content" name="content" rows="4" required>{{ dd.content }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="file" class="form-label">上传附件（重新上传将替换旧文件）</label>
+                        <input type="file" class="form-control" id="file" name="file">
+                        <div class="form-text">当前文件： 
+                            {% if dd.file_path %}
+                                <a href="{{ url_for('uploaded_file', filename=dd.file_path.split('/')[-1]) }}" target="_blank">{{ dd.file_path.split('/')[-1] }}</a>
+                            {% else %}
+                                无
+                            {% endif %}
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <a href="{{ url_for('fund_detail', fund_id=dd.fund_id) }}" class="btn btn-secondary">取消</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

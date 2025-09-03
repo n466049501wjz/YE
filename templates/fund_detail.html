@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ fund.name }}</h1>
+    <div>
+        <a href="{{ url_for('edit_fund', fund_id=fund.id) }}" class="btn btn-primary">编辑私募信息</a>
+        <form action="{{ url_for('delete_fund', fund_id=fund.id) }}" method="post" style="display: inline;">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('确定要删除这个私募吗？此操作不可撤销。')">删除私募</button>
+        </form>
+        <a href="{{ url_for('funds') }}" class="btn btn-secondary">返回列表</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title">基本信息</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="30%">成立日期</th>
+                        <td>{{ fund.establishment_date.strftime('%Y-%m-%d') if fund.establishment_date else '未知' }}</td>
+                    </tr>
+                    <tr>
+                        <th>管理规模(亿元)</th>
+                        <td>{{ fund.management_scale if fund.management_scale else '未知' }}</td>
+                    </tr>
+                    <tr>
+                        <th>团队规模</th>
+                        <td>{{ fund.team_size if fund.team_size else '未知' }}</td>
+                    </tr>
+                    <tr>
+                        <th>策略标签</th>
+                        <td>
+                            {% if fund.strategy_tags %}
+                                {% for tag in fund.strategy_tags.split(',') %}
+                                    <span class="badge bg-primary">{{ tag.strip() }}</span>
+                                {% endfor %}
+                            {% else %}
+                                未知
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>所在地区</th>
+                        <td>{{ fund.region if fund.region else '未知' }}</td>
+                    </tr>
+                    <tr>
+                        <th>关键词</th>
+                        <td>{{ fund.keywords if fund.keywords else '无' }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">尽调记录</h5>
+    </div>
+    <div class="card-body">
+        {% if due_diligences %}
+        <div class="list-group mb-4">
+            {% for dd in due_diligences %}
+            <div class="list-group-item">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">{{ dd.date.strftime('%Y-%m-%d') }}</h6>
+                    <div>
+                        <small>由 {{ dd.author.username }} 记录</small>
+                        {% if current_user.id == dd.user_id or current_user.role == 'admin' %}
+                        <a href="{{ url_for('edit_due_diligence', dd_id=dd.id) }}" class="btn btn-sm btn-outline-secondary">编辑</a>
+                        <form action="{{ url_for('delete_due_diligence', dd_id=dd.id) }}" method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('确定要删除这个尽调记录吗？')">删除</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                <p class="mb-1">{{ dd.content }}</p>
+                {% if dd.file_path %}
+                <div class="mt-2">
+                    <a href="{{ url_for('uploaded_file', filename=dd.file_path) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                        <i class="bi bi-file-earmark"></i> 查看附件
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- 批注部分 -->
+                <div class="mt-3 border-top pt-2">
+                    <h6 class="mb-2">批注:</h6>
+                    {% for comment in dd.comments %}
+                    <div class="card mb-2">
+                        <div class="card-body py-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ comment.comment_author.username }}</strong>
+                                    <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </div>
+                                {% if current_user.id == comment.user_id or current_user.role == 'admin' %}
+                                <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="post">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('确定要删除这个批注吗？')">删除</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                            <p class="mb-0 mt-1">{{ comment.content }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <form method="post" action="{{ url_for('add_comment', dd_id=dd.id) }}" class="mt-2">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="添加批注..." name="content" required>
+                            <button class="btn btn-outline-secondary" type="submit">提交</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">暂无尽调记录</p>
+        {% endif %}
+        
+        <h6>添加尽调记录</h6>
+        <form method="post" action="{{ url_for('add_due_diligence', fund_id=fund.id) }}" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="date" class="form-label">尽调日期</label>
+                <input type="date" class="form-control" id="date" name="date" value="{{ now.strftime('%Y-%m-%d') }}">
+            </div>
+            <div class="mb-3">
+                <label for="content" class="form-label">尽调内容</label>
+                <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="file" class="form-label">上传附件</label>
+                <input type="file" class="form-control" id="file" name="file">
+                <div class="form-text">支持PDF、图片、Word文档等格式，最大16MB</div>
+            </div>
+            <button type="submit" class="btn btn-primary">提交</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

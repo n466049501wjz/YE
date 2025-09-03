@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="mb-4">数据看板</h1>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">总私募数量</h5>
+                <p class="card-text display-6">{{ total_funds }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">我的更新数量</h5>
+                <p class="card-text display-6">{{ user_updates }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">用户权限</h5>
+                <p class="card-text">{{ '管理员' if current_user.role == 'admin' else '普通用户' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">私募地区分布</h5>
+            </div>
+            <div class="card-body">
+                <div id="region-chart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">最近更新</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_updates %}
+                <div class="list-group">
+                    {% for update in recent_updates %}
+                    <a href="{{ url_for('fund_detail', fund_id=update.fund.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ update.fund.name }}</h6>
+                            <small>{{ update.date.strftime('%Y-%m-%d') }}</small>
+                        </div>
+                        <p class="mb-1">{{ update.content[:100] }}{% if update.content|length > 100 %}...{% endif %}</p>
+                        <small>由 {{ update.author.username }} 更新</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">暂无更新记录</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var regionData = {{ region_data | safe }};
+    var chartDom = document.getElementById('region-chart');
+    var myChart = echarts.init(chartDom);
+    var option;
+
+    var regions = Object.keys(regionData);
+    var values = Object.values(regionData);
+
+    option = {
+        tooltip: {
+            trigger: 'axis',
+            formatter: '{b}: {c} 家私募'
+        },
+        xAxis: {
+            type: 'category',
+            data: regions,
+            axisLabel: {
+                rotate: 45
+            }
+        },
+        yAxis: {
+            type: 'value',
+            name: '数量'
+        },
+        series: [{
+            data: values,
+            type: 'bar',
+            itemStyle: {
+                color: '#0d6efd'
+            }
+        }]
+    };
+
+    option && myChart.setOption(option);
+
+    // 响应窗口大小变化
+    window.addEventListener('resize', function() {
+        myChart.resize();
+    });
+});
+</script>
+{% endblock %}

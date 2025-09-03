@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">编辑私募信息</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">私募名称</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ fund.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="establishment_date" class="form-label">成立日期</label>
+                        <input type="date" class="form-control" id="establishment_date" name="establishment_date" 
+                               value="{{ fund.establishment_date.strftime('%Y-%m-%d') if fund.establishment_date else '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="management_scale" class="form-label">管理规模(亿元)</label>
+                        <input type="number" step="0.1" class="form-control" id="management_scale" name="management_scale" 
+                               value="{{ fund.management_scale if fund.management_scale else '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="team_size" class="form-label">团队规模</label>
+                        <input type="number" class="form-control" id="team_size" name="team_size" 
+                               value="{{ fund.team_size if fund.team_size else '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="strategy_tags" class="form-label">策略标签(多个标签用逗号分隔)</label>
+                        <input type="text" class="form-control" id="strategy_tags" name="strategy_tags" 
+                               value="{{ fund.strategy_tags if fund.strategy_tags else '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="region" class="form-label">所在地区</label>
+                        <input type="text" class="form-control" id="region" name="region" 
+                               value="{{ fund.region if fund.region else '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="keywords" class="form-label">关键词(多个关键词用逗号分隔)</label>
+                        <input type="text" class="form-control" id="keywords" name="keywords" 
+                               value="{{ fund.keywords if fund.keywords else '' }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <a href="{{ url_for('fund_detail', fund_id=fund.id) }}" class="btn btn-secondary">取消</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
